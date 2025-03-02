@@ -1,0 +1,27 @@
+.headSection {
+  display: flex;
+  text-align: center;
+  padding: 7% 15%;
+  flex-direction: column;
+  align-items: center;
+  row-gap: 40px;
+}
+
+.title {
+  color: #1e3a8a;
+  font-size: 3.75rem;
+  font-weight: bold;
+  width: 100%;
+}
+
+.subTitle {
+  color: #343a40;
+  width: 100%;
+}
+
+.startButton {
+  background-color: #f39c12 !important;
+  width: 10% !important;
+  color: #eaeded !important;
+  font-size: 18px !important;
+}

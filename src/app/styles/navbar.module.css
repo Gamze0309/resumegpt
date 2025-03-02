@@ -1,0 +1,10 @@
+.navbar {
+  position: static !important;
+  background-color: #1e3a8a !important;
+  color: #b6bed3 !important;
+}
+
+.button:hover {
+  color: #eaeded !important;
+  background-color: #183075 !important;
+}
