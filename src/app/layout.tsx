@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
-import MuiNavbar from "@/components/navbar";
+import MuiNavbar from "@/components/Navbar/navbar";
 
 const poppins = Poppins({
   variable: "--font-poppins",

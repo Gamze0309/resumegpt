@@ -5,7 +5,7 @@ import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
 import Link from "next/link";
 import { Box } from "@mui/material";
-import styles from "../app/styles/navbar.module.css";
+import styles from "./navbar.module.css";
 
 export default function MuiNavbar() {
   return (
