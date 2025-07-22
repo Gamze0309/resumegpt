@@ -4,6 +4,7 @@ import pdfplumber
 import io
 from dotenv import load_dotenv
 import os
+from sections_extraction import detect_sections
 
 app = Flask(__name__)
 
@@ -29,7 +30,8 @@ def process_resume():
         for page in pdf.pages:
             text += page.extract_text() + '\n'
 
-    return jsonify({"text": text})
+    
+    return jsonify({"text": detect_sections(text)})
 
 if __name__ == '__main__':
     app.run(host="localhost", port=5000)
