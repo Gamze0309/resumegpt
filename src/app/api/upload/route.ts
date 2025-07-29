@@ -46,7 +46,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     
     if (response.ok) {
       const data = await response.json();
-      console.log("CV text: ", data.text);
+      console.log("CV process result: ", data.process_result);
     } else {
       console.error("Failed to process resume: ", response.statusText);
     }
