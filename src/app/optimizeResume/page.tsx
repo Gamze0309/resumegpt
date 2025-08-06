@@ -51,7 +51,17 @@ export default function OptimizeResumePage() {
       body: resume,
     });
 
-    if (!uploadResponse.ok) throw new Error("Upload failed");
+    if (uploadResponse.ok) {
+      const response = await fetch("/api/processResume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: "1234",
+          fileName: resume.name,
+          fileType: resume.type,
+        }),
+      });
+    } else throw new Error("Upload failed");
   };
 
   React.useEffect(() => {

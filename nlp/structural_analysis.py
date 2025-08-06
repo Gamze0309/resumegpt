@@ -43,11 +43,15 @@ def get_result_of_found_sections(parsed_sections):
         if not any(recommended in section_name for section_name in section_names):
             missing_recommended_sections.append(recommended)
 
-    print(missing_recommended_sections)
     if len(missing_recommended_sections) > 0:
         return_texts.append("Some recommended sections are missing: " + ", ".join(missing_recommended_sections) + ".")
     else:
         return_texts.append("You provided recommended sections (projects, certifications and languages).")
+    
+    # Check for the all sections are not blank
+    for section, content in parsed_sections.items():
+        if not bool(content.strip()):
+            return_texts.append(section + " section content are missing.")
 
     return return_texts
 

@@ -35,21 +35,6 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
   try {
     const url = await s3.getSignedUrlPromise('putObject', params)
-    const response = await fetch("http://127.0.0.1:5000/process-resume", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        bucket: process.env.AWS_BUCKET_NAME,
-        key: `resumes/${userId}/${fileName}`,
-      }),
-    });
-    
-    if (response.ok) {
-      const data = await response.json();
-      console.log("CV process result: ", data.process_result);
-    } else {
-      console.error("Failed to process resume: ", response.statusText);
-    }
     return NextResponse.json({ url });
   } catch (err) {
     console.error('Error generating URL:', err)
