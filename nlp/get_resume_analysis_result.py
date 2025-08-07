@@ -11,7 +11,7 @@ from enums import FileContentType
 
 app = Flask(__name__)
 
-SECTION_KEYWORDS = ["profile", "professional experience", "experience", "education", "skills", "projects", "certifications", "summary", "contact", "languages", "awards", "strenghts", "courses", "tools"]
+SECTION_KEYWORDS = ["profile", "professional experience", "experience", "education", "skills", "skills & abilities", "skills and abilities", "projects", "certifications", "summary", "contact", "languages", "awards", "strenghts", "courses", "tools", "hobbies", "activities and interests"]
 DOCX_MIME = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 PDF_MIME = "application/pdf"
 
@@ -92,7 +92,6 @@ def detect_multicolumn_layout_pdf(pdf_content):
                     clusters.append([x])
                 else:
                     clusters[-1].append(x)
-            print(clusters)
             if len(clusters) >= 2:
                 return FileContentType.MULTICOLUMN, text
             text += page.extract_text() + '\n'
@@ -110,7 +109,7 @@ def detect_multicolumn_layout_docx(docx_content):
             isThereParagraph = True
         if para.alignment is not None:
             alignment_types.append(para.alignment)
-        text += para.text
+        text += para.text.strip() + '\n'
     unique_alignments = set(alignment_types)
     
     if len(unique_alignments) >= 2:

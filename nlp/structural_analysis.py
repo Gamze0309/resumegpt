@@ -93,7 +93,7 @@ def has_email(other_text):
     return bool(re.search(email_pattern, other_text))
 
 def has_phone_number(other_text):
-    phone_pattern = r'(\+?\d{1,3}[\s\-]?)?(\(?\d{2,4}\)?[\s\-]?)?\d{6,}'
+    phone_pattern = r'(\+?\d{1,3}[\s\-\.]?)?(\(?\d{2,4}\)?[\s\-\.]?)?[\d\s\-\.]{6,}'
     return bool(re.search(phone_pattern, other_text))
 
 def has_address(text):
@@ -101,5 +101,5 @@ def has_address(text):
     return any(ent.label_ == "GPE" for ent in doc.ents)
 
 def has_website(other_text):
-    pattern = r"https?://[^\s]+"
+    pattern = r"(https?://|www\.)[^\s]+"
     return bool(re.search(pattern, other_text, re.IGNORECASE))
