@@ -5,9 +5,11 @@ import io
 from dotenv import load_dotenv
 import os
 from structural_analysis import structural_analysis
+from contextual_analysis import contextual_analysis
+from structural_analysis import nlp
 from docx import Document
 import requests
-from enums import FileContentType
+import re
 
 app = Flask(__name__)
 
@@ -19,7 +21,7 @@ PDF_MIME = "application/pdf"
 def process_resume():
     data = request.json
     file_url = data["url"]
-    fileType = data['fileType']
+    file_type = data['fileType']
 
     load_dotenv(dotenv_path="../.env.local")
 
@@ -32,23 +34,22 @@ def process_resume():
 
     response = requests.get(file_url)
     file_content = response.content
-    file_content_type = FileContentType.STANDARD
     text = ""
 
-    if fileType == PDF_MIME:
-        file_content_type, text = detect_multicolumn_layout_pdf(file_content)
+    if file_type == PDF_MIME:
+        text = get_content_pdf(file_content)
 
-    elif fileType == DOCX_MIME:
-        file_content_type, text = detect_multicolumn_layout_docx(file_content)
+    elif file_type == DOCX_MIME:
+        text = get_content_docx(file_content)
 
-    if file_content_type != FileContentType.MULTICOLUMN and file_content_type != FileContentType.TABLE :
-        parsed_sections = detect_sections(text)
-        analysis_result =  result_analysis(parsed_sections)
+    if len(text) < 1500 or len(text) > 12000:
+        return({"process_result": {"structural": "The number of characters in your resume does not meet the standards. It is either too long or too short."}})
 
-        return jsonify({"file_content_type": file_content_type.value,"process_result": analysis_result})
-    else:
-        return({"file_content_type": file_content_type.value})
+    parsed_sections = detect_sections(text)
+    analysis_result =  result_analysis(parsed_sections, file_content, file_type)
 
+    return jsonify({"process_result": analysis_result})
+            
 def detect_sections(text):
     lines = text.splitlines()
     sections = {}
@@ -66,61 +67,27 @@ def detect_sections(text):
 
     return {k: "\n".join(v).strip() for k, v in sections.items() if v}
 
-def result_analysis(parsed_sections):
+def result_analysis(parsed_sections, text, file_type):
     process_result = {}
-    structural_analysis_result = structural_analysis(parsed_sections)
-    process_result["structural"] = structural_analysis_result
+    process_result["structural"] = structural_analysis(parsed_sections, text, file_type)
+    process_result["contextual"] = contextual_analysis(parsed_sections)
 
     return process_result
 
-def detect_multicolumn_layout_pdf(pdf_content):
+def get_content_pdf(pdf_content):
     with pdfplumber.open(io.BytesIO(pdf_content)) as pdf:
         text = ""
         for page in pdf.pages:
-            words = page.extract_words()
-            x_positions = [float(word['x0']) for word in words]
-
-            if not x_positions:
-                continue
-
-            x_positions.sort()
-            threshold = 50
-            clusters = [[x_positions[0]]]
-
-            for x in x_positions[1:]:
-                if abs(x - clusters[-1][-1]) > threshold:
-                    clusters.append([x])
-                else:
-                    clusters[-1].append(x)
-            if len(clusters) >= 2:
-                return FileContentType.MULTICOLUMN, text
             text += page.extract_text() + '\n'
 
-    return FileContentType.STANDARD, text
+    return text
 
-def detect_multicolumn_layout_docx(docx_content):
-    document = Document(io.BytesIO(docx_content))
-    alignment_types = []
+def get_content_docx(docx_content):
     text = ""
-    isThereParagraph = False
-
-    for para in document.paragraphs:
-        if para.text != '':
-            isThereParagraph = True
-        if para.alignment is not None:
-            alignment_types.append(para.alignment)
+    for para in Document(io.BytesIO(docx_content)).paragraphs:
         text += para.text.strip() + '\n'
-    unique_alignments = set(alignment_types)
-    
-    if len(unique_alignments) >= 2:
-        return FileContentType.MULTICOLUMN, text
-    
-    if document.tables:
-        if not isThereParagraph:
-            return FileContentType.TABLE, text
-        return FileContentType.CONTAINS_TABLE, text
-    
-    return FileContentType.STANDARD, text
+
+    return text
 
 if __name__ == '__main__':
     app.run(host="localhost", port=5000)
