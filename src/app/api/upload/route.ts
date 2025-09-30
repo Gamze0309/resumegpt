@@ -1,50 +1,43 @@
-import AWS from "aws-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { PdfReader } from "pdfreader";
 
-export async function OPTIONS() {
-  const res = NextResponse.json(null, { status: 204 });
-
-  res.headers.set("Access-Control-Allow-Origin", "*");
-  res.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.headers.set("Access-Control-Allow-Headers", "Content-Type");
-
-  return res;
-}
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest): Promise<NextResponse> {
-  const body = await req.json();
-  const { userId, fileName, fileType } = body;
-
-  if (!fileName || !fileType) {
-    return NextResponse.json(
-      { error: "Missing required fields" },
-      { status: 400 }
-    );
-  }
-
-  const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-    region: process.env.AWS_REGION!,
-    signatureVersion: "v4",
-  });
-
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME!,
-    Key: `resumes/${userId}/${fileName}`,
-    Expires: 60,
-    ContentType: fileType,
-  };
-
   try {
-    const url = await s3.getSignedUrlPromise("putObject", params);
-    console.log(url);
-    return NextResponse.json({ url });
-  } catch (err) {
-    console.error("Error generating URL:", err);
-    return NextResponse.json(
-      { error: "Could not generate URL" },
-      { status: 500 }
-    );
+    const formData = await req.formData();
+    const file = formData.get("file") as File | null;
+
+    if (!file) {
+      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    const textContent = await new Promise<string>((resolve, reject) => {
+      const reader = new PdfReader();
+      let content = "";
+
+      reader.parseBuffer(buffer, (err: any, item: any) => {
+        if (err) {
+          reject(err);
+          return;
+        }
+
+        if (!item) {
+          resolve(content);
+          return;
+        }
+
+        if (item.text) {
+          content += item.text;
+        }
+      });
+    });
+    return NextResponse.json({ text: textContent });
+  } catch (err: any) {
+    console.log("aa");
+    return NextResponse.json({ err: err.message }, { status: 500 });
   }
 }

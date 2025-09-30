@@ -20,48 +20,23 @@ export default function OptimizeResumePage() {
     width: 1,
   });
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    console.log(event.target.files);
     if (event.target.files) {
       setResume(event.target.files[0]);
-    }
-  };
 
-  const uploadResume = async () => {
-    if (!resume) {
-      return;
-    }
+      const formData = new FormData();
+      formData.append("file", event.target.files[0]);
 
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: "1234",
-        fileName: resume.name,
-        fileType: resume.type,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!data.url) throw new Error("Failed to get pre-signed URL");
-
-    const uploadResponse = await fetch(data.url, {
-      method: "PUT",
-      headers: { "Content-Type": resume.type },
-      body: resume,
-    });
-
-    if (uploadResponse.ok) {
-      const response = await fetch("/api/processResume", {
+      const res = await fetch("/api/upload", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: "1234",
-          fileName: resume.name,
-          fileType: resume.type,
-        }),
+        body: formData,
       });
-    } else throw new Error("Upload failed");
+      const data = await res.json();
+      console.log(data);
+    }
   };
 
   React.useEffect(() => {
@@ -70,7 +45,6 @@ export default function OptimizeResumePage() {
     }
 
     try {
-      uploadResume();
       alert("CV uploaded successfully!");
     } catch (err: unknown) {
       if (err instanceof Error) {
